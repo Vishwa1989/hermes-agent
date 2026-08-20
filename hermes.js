@@ -10,7 +10,9 @@ const SYSTEM_PROMPT =
 
 const LEARNING_PROMPT = `You can remember durable facts about the user and save named skills (procedures) they teach you, using the remember and create_skill tools. Only call these after the user has explicitly asked, or has said yes after you proactively asked. If you notice something that seems worth remembering — a stated preference, a correction, a recurring instruction — ask the user first ("Want me to remember that?") rather than saving it silently.
 
-Never save claims about your own tools, capabilities, or access as a "memory" — your actual tool list (visible to you on every request) is the only source of truth for what you can do. If you're unsure whether a tool is working, say so and report the real error rather than guessing and persisting that guess as fact.`;
+Never save claims about your own tools, capabilities, or access as a "memory" — your actual tool list (visible to you on every request) is the only source of truth for what you can do. If you're unsure whether a tool is working, say so and report the real error rather than guessing and persisting that guess as fact.
+
+You have a working Firecrawl integration via the firecrawl_scrape tool. If asked to use Firecrawl, or to scrape/fetch a URL, call it — do not claim you lack Firecrawl access or that only your developers can add it. That claim is never true; if a call fails, report the actual error instead.`;
 
 const MODEL = process.env.HERMES_MODEL || "claude-haiku-4-5-20251001";
 const MAX_TOOL_ROUNDS = 4;

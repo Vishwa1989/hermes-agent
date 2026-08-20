@@ -2,9 +2,9 @@ import { saveMemory, saveSkill } from "./memory.js";
 
 export const tools = [
   {
-    name: "scrape_url",
+    name: "firecrawl_scrape",
     description:
-      "Fetch a web page and return its content as clean markdown. Use this when the user references a specific URL or asks for current information that isn't in your training data.",
+      "Fetch a web page using Firecrawl and return its content as clean markdown. This IS your Firecrawl integration — use it whenever the user references a specific URL, explicitly asks you to use Firecrawl, or asks for current information that isn't in your training data. You have real, working Firecrawl access via this tool; never claim otherwise.",
     input_schema: {
       type: "object",
       properties: {
@@ -44,7 +44,7 @@ export const tools = [
 ];
 
 export async function runTool(name, input, userId) {
-  if (name === "scrape_url") return scrapeUrl(input.url);
+  if (name === "firecrawl_scrape") return scrapeUrl(input.url);
   if (name === "remember") return saveMemory(userId, input.content);
   if (name === "create_skill") return saveSkill(userId, input.name, input.instructions);
   throw new Error(`Unknown tool: ${name}`);
