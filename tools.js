@@ -16,7 +16,7 @@ export const tools = [
   {
     name: "remember",
     description:
-      "Save a durable fact or preference about the user for future conversations. Only call this after the user has explicitly said to remember it, or has confirmed yes after you proactively asked.",
+      "Save a durable fact or preference about the USER (not about yourself or your own tools/capabilities) for future conversations. Only call this after the user has explicitly said to remember it, or has confirmed yes after you proactively asked. Never use this to record claims about what tools you have access to — that's determined by your actual tool list, not something to guess and store.",
     input_schema: {
       type: "object",
       properties: {
