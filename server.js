@@ -17,7 +17,7 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const reply = await getHermesReply(messages);
+    const reply = await getHermesReply(messages, "web");
     res.json({ reply });
   } catch (err) {
     console.error(err);
@@ -41,7 +41,7 @@ app.post("/webhook/whatsapp", async (req, res) => {
 
   const history = appendTurn(incoming.from, "user", incoming.text);
   try {
-    const reply = await getHermesReply(history);
+    const reply = await getHermesReply(history, incoming.from);
     appendTurn(incoming.from, "assistant", reply);
     await sendWhatsAppMessage(incoming.from, reply);
   } catch (err) {

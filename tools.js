@@ -1,3 +1,5 @@
+import { saveMemory, saveSkill } from "./memory.js";
+
 export const tools = [
   {
     name: "scrape_url",
@@ -11,10 +13,40 @@ export const tools = [
       required: ["url"],
     },
   },
+  {
+    name: "remember",
+    description:
+      "Save a durable fact or preference about the user for future conversations. Only call this after the user has explicitly said to remember it, or has confirmed yes after you proactively asked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        content: {
+          type: "string",
+          description: "The fact to remember, written in third person, e.g. 'Prefers metric units.'",
+        },
+      },
+      required: ["content"],
+    },
+  },
+  {
+    name: "create_skill",
+    description:
+      "Save a named procedure the user has taught you, so you follow it automatically in future conversations without being asked again.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Short identifier, e.g. 'morning-briefing'" },
+        instructions: { type: "string", description: "The exact procedure to follow when this skill applies" },
+      },
+      required: ["name", "instructions"],
+    },
+  },
 ];
 
-export async function runTool(name, input) {
+export async function runTool(name, input, userId) {
   if (name === "scrape_url") return scrapeUrl(input.url);
+  if (name === "remember") return saveMemory(userId, input.content);
+  if (name === "create_skill") return saveSkill(userId, input.name, input.instructions);
   throw new Error(`Unknown tool: ${name}`);
 }
 
