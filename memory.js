@@ -10,11 +10,19 @@ const MAX_MEMORIES = 20;
 // Builds the extra system-prompt block for a user: taught skills + remembered
 // facts. Returns "" if Supabase isn't configured yet, so the rest of Hermes
 // keeps working without it.
-export async function getMemoryContext(userId) {
+//
+// sharedSkillScope (optional) lets a whole bot (not just one person) share a
+// set of skills — e.g. every chat on @Gentleborn_bot gets the EHR-ranking
+// skill without each person having to be taught it individually. Memories
+// stay strictly per-userId regardless — those are personal facts, never
+// shared across a bot's whole userbase.
+export async function getMemoryContext(userId, sharedSkillScope) {
   if (!supabase) return "";
 
+  const skillScopes = sharedSkillScope ? [userId, sharedSkillScope] : [userId];
+
   const [{ data: skills }, { data: memories }] = await Promise.all([
-    supabase.from("skills").select("name, instructions").eq("user_id", userId),
+    supabase.from("skills").select("name, instructions").in("user_id", skillScopes),
     supabase
       .from("memories")
       .select("content")

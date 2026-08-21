@@ -21,9 +21,9 @@ const MAX_OUTPUT_TOKENS = 4096;
 // Shared by the web chat UI and the WhatsApp webhook — any channel just
 // needs to pass in a message history and a userId, and gets back a final
 // reply, with tool calls (Firecrawl, memory, skills) resolved along the way.
-export async function getHermesReply(messages, userId = "default") {
+export async function getHermesReply(messages, userId = "default", sharedSkillScope) {
   const working = [...messages];
-  const memoryContext = await getMemoryContext(userId);
+  const memoryContext = await getMemoryContext(userId, sharedSkillScope);
 
   const system = [
     { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },

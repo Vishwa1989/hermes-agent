@@ -72,7 +72,7 @@ app.post("/webhook/telegram/:slug", async (req, res) => {
   const userId = `telegram:${incoming.chatId}`;
   const history = appendTurn(userId, "user", incoming.text);
   try {
-    const reply = await getHermesReply(history, userId);
+    const reply = await getHermesReply(history, userId, bot.skillScope);
     appendTurn(userId, "assistant", reply);
     await sendTelegramMessage(bot.token, incoming.chatId, reply);
   } catch (err) {

@@ -10,6 +10,9 @@ const bots = {
   rahul: {
     token: process.env.TELEGRAM_BOT_TOKEN_RAHUL,
     secret: process.env.TELEGRAM_WEBHOOK_SECRET_RAHUL,
+    // Every chat on this bot shares the skills stored under this scope —
+    // Gentleborn's EHR-ranking skill, not tied to any one person's chat ID.
+    skillScope: "telegram-bot:rahul",
   },
 };
 
