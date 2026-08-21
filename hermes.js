@@ -12,10 +12,11 @@ const LEARNING_PROMPT = `You can remember durable facts about the user and save 
 
 Never save claims about your own tools, capabilities, or access as a "memory" — your actual tool list (visible to you on every request) is the only source of truth for what you can do. If you're unsure whether a tool is working, say so and report the real error rather than guessing and persisting that guess as fact.
 
-You have a working Firecrawl integration via the firecrawl_scrape tool. If asked to use Firecrawl, or to scrape/fetch a URL, call it — do not claim you lack Firecrawl access or that only your developers can add it. That claim is never true; if a call fails, report the actual error instead.`;
+You have a working Firecrawl integration via the firecrawl_search and firecrawl_scrape tools. If asked to use Firecrawl, or to scrape/fetch a URL, call it — do not claim you lack Firecrawl access or that only your developers can add it. That claim is never true; if a call fails, report the actual error instead. Use firecrawl_search when you need to discover URLs you don't already know (e.g. "what companies offer X"); use firecrawl_scrape once you have a specific URL to read in full.`;
 
 const MODEL = process.env.HERMES_MODEL || "claude-haiku-4-5-20251001";
-const MAX_TOOL_ROUNDS = 4;
+const MAX_TOOL_ROUNDS = 10;
+const MAX_OUTPUT_TOKENS = 4096;
 
 // Shared by the web chat UI and the WhatsApp webhook — any channel just
 // needs to pass in a message history and a userId, and gets back a final
@@ -33,7 +34,7 @@ export async function getHermesReply(messages, userId = "default") {
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 1024,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system,
       tools,
       messages: working,

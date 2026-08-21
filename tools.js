@@ -2,6 +2,19 @@ import { saveMemory, saveSkill } from "./memory.js";
 
 export const tools = [
   {
+    name: "firecrawl_search",
+    description:
+      "Search the web using Firecrawl and get back a list of matching pages (title, URL, snippet). Use this to DISCOVER candidate URLs when you don't already know the exact page to fetch — e.g. finding vendors listed on G2/Capterra, or finding a company's site. Follow up with firecrawl_scrape on whichever result URLs you need full content from.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "The search query" },
+        limit: { type: "number", description: "Max results to return (default 5, keep small to control cost)" },
+      },
+      required: ["query"],
+    },
+  },
+  {
     name: "firecrawl_scrape",
     description:
       "Fetch a web page using Firecrawl and return its content as clean markdown. This IS your Firecrawl integration — use it whenever the user references a specific URL, explicitly asks you to use Firecrawl, or asks for current information that isn't in your training data. You have real, working Firecrawl access via this tool; never claim otherwise.",
@@ -44,10 +57,34 @@ export const tools = [
 ];
 
 export async function runTool(name, input, userId) {
+  if (name === "firecrawl_search") return searchWeb(input.query, input.limit);
   if (name === "firecrawl_scrape") return scrapeUrl(input.url);
   if (name === "remember") return saveMemory(userId, input.content);
   if (name === "create_skill") return saveSkill(userId, input.name, input.instructions);
   throw new Error(`Unknown tool: ${name}`);
+}
+
+async function searchWeb(query, limit = 5) {
+  const res = await fetch("https://api.firecrawl.dev/v1/search", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, limit: Math.min(limit || 5, 8) }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Firecrawl search failed: ${res.status} ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  const results = (data?.data || []).map((r) => ({
+    title: r.title,
+    url: r.url,
+    snippet: (r.description || "").slice(0, 300),
+  }));
+  return JSON.stringify(results);
 }
 
 async function scrapeUrl(url) {
