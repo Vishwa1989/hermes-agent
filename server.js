@@ -2,6 +2,11 @@ import "dotenv/config";
 import express from "express";
 import { getHermesReply } from "./hermes.js";
 import { verifyWebhook, extractIncomingMessage, sendWhatsAppMessage } from "./whatsapp.js";
+import {
+  extractIncomingMessage as extractTelegramMessage,
+  verifyTelegramSecret,
+  sendTelegramMessage,
+} from "./telegram.js";
 import { getHistory, appendTurn } from "./sessions.js";
 
 const app = express();
@@ -46,6 +51,27 @@ app.post("/webhook/whatsapp", async (req, res) => {
     await sendWhatsAppMessage(incoming.from, reply);
   } catch (err) {
     console.error("WhatsApp reply failed:", err);
+  }
+});
+
+// Telegram POSTs every inbound message here — no GET-verification handshake
+// needed (unlike Meta); the webhook is registered once via setWebhook.
+app.post("/webhook/telegram", async (req, res) => {
+  res.sendStatus(200); // ack immediately
+
+  if (!verifyTelegramSecret(req)) return; // silently drop unverified requests
+
+  const incoming = extractTelegramMessage(req.body);
+  if (!incoming) return;
+
+  const userId = `telegram:${incoming.chatId}`;
+  const history = appendTurn(userId, "user", incoming.text);
+  try {
+    const reply = await getHermesReply(history, userId);
+    appendTurn(userId, "assistant", reply);
+    await sendTelegramMessage(incoming.chatId, reply);
+  } catch (err) {
+    console.error("Telegram reply failed:", err);
   }
 });
 
