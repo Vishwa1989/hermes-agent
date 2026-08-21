@@ -1,4 +1,22 @@
-const apiUrl = (method) => `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/${method}`;
+// Each entry is one Telegram bot Hermes answers as. Keyed by the URL slug
+// used in the webhook path (/webhook/telegram/:slug), so adding another
+// person's bot later is just another env var + registerWebhook call, no
+// code changes.
+const bots = {
+  vishwa: {
+    token: process.env.TELEGRAM_BOT_TOKEN,
+    secret: process.env.TELEGRAM_WEBHOOK_SECRET,
+  },
+  rahul: {
+    token: process.env.TELEGRAM_BOT_TOKEN_RAHUL,
+    secret: process.env.TELEGRAM_WEBHOOK_SECRET_RAHUL,
+  },
+};
+
+export function getBot(slug) {
+  const bot = bots[slug];
+  return bot?.token ? bot : null;
+}
 
 export function extractIncomingMessage(body) {
   const message = body?.message;
@@ -9,14 +27,13 @@ export function extractIncomingMessage(body) {
 // Telegram sends this header on every webhook call once a secret_token is
 // registered via setWebhook — cheap way to reject requests that didn't
 // actually come from Telegram.
-export function verifyTelegramSecret(req) {
-  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!expected) return true; // not configured yet — skip check rather than block everything
-  return req.get("X-Telegram-Bot-Api-Secret-Token") === expected;
+export function verifyTelegramSecret(req, expectedSecret) {
+  if (!expectedSecret) return true; // not configured yet — skip check rather than block everything
+  return req.get("X-Telegram-Bot-Api-Secret-Token") === expectedSecret;
 }
 
-export async function sendTelegramMessage(chatId, text) {
-  const res = await fetch(apiUrl("sendMessage"), {
+export async function sendTelegramMessage(token, chatId, text) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text }),

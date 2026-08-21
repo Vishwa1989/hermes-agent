@@ -3,6 +3,7 @@ import express from "express";
 import { getHermesReply } from "./hermes.js";
 import { verifyWebhook, extractIncomingMessage, sendWhatsAppMessage } from "./whatsapp.js";
 import {
+  getBot,
   extractIncomingMessage as extractTelegramMessage,
   verifyTelegramSecret,
   sendTelegramMessage,
@@ -55,11 +56,15 @@ app.post("/webhook/whatsapp", async (req, res) => {
 });
 
 // Telegram POSTs every inbound message here — no GET-verification handshake
-// needed (unlike Meta); the webhook is registered once via setWebhook.
-app.post("/webhook/telegram", async (req, res) => {
+// needed (unlike Meta). One route per bot, identified by :slug, so each
+// person's bot is registered against its own token (multi-bot, same brain).
+app.post("/webhook/telegram/:slug", async (req, res) => {
   res.sendStatus(200); // ack immediately
 
-  if (!verifyTelegramSecret(req)) return; // silently drop unverified requests
+  const bot = getBot(req.params.slug);
+  if (!bot) return; // unknown bot slug
+
+  if (!verifyTelegramSecret(req, bot.secret)) return; // silently drop unverified requests
 
   const incoming = extractTelegramMessage(req.body);
   if (!incoming) return;
@@ -69,9 +74,9 @@ app.post("/webhook/telegram", async (req, res) => {
   try {
     const reply = await getHermesReply(history, userId);
     appendTurn(userId, "assistant", reply);
-    await sendTelegramMessage(incoming.chatId, reply);
+    await sendTelegramMessage(bot.token, incoming.chatId, reply);
   } catch (err) {
-    console.error("Telegram reply failed:", err);
+    console.error(`Telegram (${req.params.slug}) reply failed:`, err);
   }
 });
 
